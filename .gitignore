@@ -45,6 +45,16 @@
 SourceArt/**/*.png
 SourceArt/**/*.tga
 
+# Downloaded assets
+Assets/*
+Content/AncientContent/*
+Content/AnimalVarietyPack/*
+Content/BlackAlder/*
+Content/Megascans/*
+Content/Mixamo/*
+Content/ParagonGideon/*
+Content/ParagonSparrow/*
+
 # Binary Files
 Binaries/*
 Plugins/*/Binaries/*
