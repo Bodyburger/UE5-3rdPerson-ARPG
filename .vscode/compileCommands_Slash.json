@@ -1,0 +1,42 @@
+[
+	{
+		"file": "D:\\Unreal Projects\\Slash_UlibarriUE5Course_Repo\\Slash\\Source\\Slash\\Private\\Items\\Item.cpp",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.35.32215\\bin\\HostX64\\x64\\cl.exe",
+			"@D:\\Unreal Projects\\Slash_UlibarriUE5Course_Repo\\Slash\\.vscode\\compileCommands_Slash\\Slash.255.rsp"
+		],
+		"directory": "C:\\Program Files\\Unreal Engine\\UE_5.1\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Unreal Projects\\Slash_UlibarriUE5Course_Repo\\Slash\\Source\\Slash\\Public\\Items\\Item.h",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.35.32215\\bin\\HostX64\\x64\\cl.exe",
+			"@D:\\Unreal Projects\\Slash_UlibarriUE5Course_Repo\\Slash\\.vscode\\compileCommands_Slash\\Slash.255.rsp"
+		],
+		"directory": "C:\\Program Files\\Unreal Engine\\UE_5.1\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Unreal Projects\\Slash_UlibarriUE5Course_Repo\\Slash\\Source\\Slash\\Slash.Build.cs",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.35.32215\\bin\\HostX64\\x64\\cl.exe",
+			"@D:\\Unreal Projects\\Slash_UlibarriUE5Course_Repo\\Slash\\.vscode\\compileCommands_Slash\\Slash.255.rsp"
+		],
+		"directory": "C:\\Program Files\\Unreal Engine\\UE_5.1\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Unreal Projects\\Slash_UlibarriUE5Course_Repo\\Slash\\Source\\Slash\\Slash.cpp",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.35.32215\\bin\\HostX64\\x64\\cl.exe",
+			"@D:\\Unreal Projects\\Slash_UlibarriUE5Course_Repo\\Slash\\.vscode\\compileCommands_Slash\\Slash.255.rsp"
+		],
+		"directory": "C:\\Program Files\\Unreal Engine\\UE_5.1\\Engine\\Source"
+	},
+	{
+		"file": "D:\\Unreal Projects\\Slash_UlibarriUE5Course_Repo\\Slash\\Source\\Slash\\Slash.h",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.35.32215\\bin\\HostX64\\x64\\cl.exe",
+			"@D:\\Unreal Projects\\Slash_UlibarriUE5Course_Repo\\Slash\\.vscode\\compileCommands_Slash\\Slash.255.rsp"
+		],
+		"directory": "C:\\Program Files\\Unreal Engine\\UE_5.1\\Engine\\Source"
+	}
+]
