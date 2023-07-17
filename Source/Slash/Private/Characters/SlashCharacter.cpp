@@ -73,15 +73,6 @@ void ASlashCharacter::Jump()
 	Super::Jump();
 }
 
-void ASlashCharacter::SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled)
-{
-	if (EquippedWeapon && EquippedWeapon->GetWeaponBox())
-	{
-		EquippedWeapon->GetWeaponBox()->SetCollisionEnabled(CollisionEnabled);
-		EquippedWeapon->IgnoreActors.Empty();
-	}
-}
-
 void ASlashCharacter::Move(const FInputActionValue& Value)
 {
 	if (ActionState != EActionState::EAS_Unoccupied) return;
@@ -155,11 +146,11 @@ void ASlashCharacter::EKeyPressed(const FInputActionValue& Value)
 	}
 }
 
-void ASlashCharacter::Attack(const FInputActionValue& Value)
+void ASlashCharacter::Attack()
 {
+	Super::Attack();
 	if (CanAttack())
 	{
-
 		PlayAttackMontage();
 		ActionState = EActionState::EAS_Attacking;
 	}
