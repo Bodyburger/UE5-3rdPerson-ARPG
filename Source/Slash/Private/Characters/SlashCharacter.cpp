@@ -6,19 +6,25 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Items/Item.h"
 #include "Items/Weapons/Weapon.h"
 #include "Animation/AnimMontage.h" 
-#include "Components/BoxComponent.h"
 
 ASlashCharacter::ASlashCharacter()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
+
+	GetMesh()->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
+	GetMesh()->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Overlap);
+	GetMesh()->SetGenerateOverlapEvents(true);
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(GetRootComponent());
@@ -28,28 +34,6 @@ ASlashCharacter::ASlashCharacter()
 	ViewCamera->SetupAttachment(CameraBoom);
 
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
-}
-
-void ASlashCharacter::BeginPlay()
-{
-	Super::BeginPlay();
-
-	Tags.Add(FName("SlashCharacter"));
-
-	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
-			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			// Remember to add this in blueprint
-			Subsystem->AddMappingContext(SlashContext, 0);
-		}
-	}
-}
-
-void ASlashCharacter::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 }
 
 void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -71,6 +55,29 @@ void ASlashCharacter::Jump()
 	if (ActionState == EActionState::EAS_Attacking) return;
 
 	Super::Jump();
+}
+
+void ASlashCharacter::GetHit_Implementation(const FVector& ImpactPoint)
+{
+	PlayHitSound(ImpactPoint);
+	SpawnHitParticles(ImpactPoint);
+}
+
+void ASlashCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	Tags.Add(FName("EngageableTarget"));
+
+	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
+			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		{
+			// Remember to add this in blueprint
+			Subsystem->AddMappingContext(SlashContext, 0);
+		}
+	}
 }
 
 void ASlashCharacter::Move(const FInputActionValue& Value)
@@ -103,45 +110,18 @@ void ASlashCharacter::EKeyPressed(const FInputActionValue& Value)
 	AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem);
 	if (OverlappingWeapon)
 	{
-		OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
+		EquipWeapon(OverlappingWeapon);
 
-		if (OverlappingWeapon->GetIsOneHanded())
-		{
-			CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
-		}
-		else
-		{
-			CharacterState = ECharacterState::ECS_EquippedTwoHandedWeapon;
-		}
-
-		OverlappingItem = nullptr;
-		EquippedWeapon = OverlappingWeapon;
 	}
 	else
 	{
 		if (CanDisarm())
 		{
-			PlayEquipMontage(FName("Unequip"));
-			CharacterState = ECharacterState::ECS_Unequipped;
-			ActionState = EActionState::EAS_EquippingWeapon;
+			Disarm();
 		}
 		else if (CanArm())
 		{
-			PlayEquipMontage(FName("Equip"));
-
-			if (EquippedWeapon->GetIsOneHanded())
-			{
-				CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
-			}
-			else
-			{
-				CharacterState = ECharacterState::ECS_EquippedTwoHandedWeapon;
-			}
-
-			// Causes a crash if input is not set to trigger only once per press,
-			// and player holds E down while trying to equip a new weapon.
-			// This crash happens right after the equip animation is completed.
-			ActionState = EActionState::EAS_EquippingWeapon;
+			Arm();
 		}
 	}
 }
@@ -154,6 +134,28 @@ void ASlashCharacter::Attack()
 		PlayAttackMontage();
 		ActionState = EActionState::EAS_Attacking;
 	}
+}
+
+void ASlashCharacter::EquipWeapon(AWeapon* Weapon)
+{
+	Weapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
+
+	if (Weapon->GetIsOneHanded())
+	{
+		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
+	}
+	else
+	{
+		CharacterState = ECharacterState::ECS_EquippedTwoHandedWeapon;
+	}
+
+	OverlappingItem = nullptr;
+	EquippedWeapon = Weapon;
+}
+
+void ASlashCharacter::AttackEnd()
+{
+	ActionState = EActionState::EAS_Unoccupied;
 }
 
 bool ASlashCharacter::CanAttack()
@@ -176,36 +178,32 @@ bool ASlashCharacter::CanArm()
 		EquippedWeapon;
 }
 
-void ASlashCharacter::PlayAttackMontage()
+void ASlashCharacter::Disarm()
 {
-	Super::PlayAttackMontage();
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (!AnimInstance || !AttackMontage) { return; }
+	PlayEquipMontage(FName("Unequip"));
+	CharacterState = ECharacterState::ECS_Unequipped;
+	ActionState = EActionState::EAS_EquippingWeapon;
+}
 
-	if (CharacterState == ECharacterState::ECS_EquippedOneHandedWeapon)
-	{
-		AnimInstance->Montage_Play(AttackMontage);
-		const int32 Selection = FMath::RandRange(0, 1);
-		FName SectionName = FName();
+void ASlashCharacter::Arm()
+{
+	PlayEquipMontage(FName("Equip"));
 
-		switch (Selection)
-		{
-		case 0:
-			SectionName = FName("Attack1");
-			break;
-		case 1:
-			SectionName = FName("Attack2");
-			break;
-		default:
-			break;
-		}
-		AnimInstance->Montage_JumpToSection(SectionName, AttackMontage);
-	}
-	else if (CharacterState == ECharacterState::ECS_EquippedTwoHandedWeapon)
+	if (EquippedWeapon->GetIsOneHanded())
 	{
-		AnimInstance->Montage_Play(AttackMontage);
-		AnimInstance->Montage_JumpToSection(FName("HeavyAttack1"), AttackMontage);
+		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
 	}
+	else
+	{
+		CharacterState = ECharacterState::ECS_EquippedTwoHandedWeapon;
+	}
+
+	/*
+	Causes a crash if input is not set to trigger only once per press,
+	and player holds E down while trying to equip a new weapon.
+	This crash happens right after the equip animation is completed.
+	*/
+	ActionState = EActionState::EAS_EquippingWeapon;
 }
 
 void ASlashCharacter::PlayEquipMontage(const FName& SectionName)
@@ -218,12 +216,7 @@ void ASlashCharacter::PlayEquipMontage(const FName& SectionName)
 	}
 }
 
-void ASlashCharacter::AttackEnd()
-{
-	ActionState = EActionState::EAS_Unoccupied;
-}
-
-void ASlashCharacter::Disarm()
+void ASlashCharacter::AttachWeaponToBack()
 {
 	if (EquippedWeapon)
 	{
@@ -231,7 +224,7 @@ void ASlashCharacter::Disarm()
 	}
 }
 
-void ASlashCharacter::Arm()
+void ASlashCharacter::AttachWeaponToHand()
 {
 	if (EquippedWeapon)
 	{
@@ -243,4 +236,3 @@ void ASlashCharacter::FinishEquipping()
 {
 	ActionState = EActionState::EAS_Unoccupied;
 }
-

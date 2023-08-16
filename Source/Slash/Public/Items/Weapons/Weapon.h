@@ -26,33 +26,44 @@ public:
 	TArray<AActor*> IgnoreActors;
 protected:
 	virtual void BeginPlay() override;
-	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
-	virtual void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) override;
 
 	UFUNCTION()
-		void OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	UFUNCTION(BlueprintImplementableEvent)
-		void CreateFields(const FVector& FieldLocation);
+	void CreateFields(const FVector& FieldLocation);
 
 private:
+	void PlayEquipSound();
+	void DisableSphereCollision();
+	void DeactivateEmbers();
+	void BoxTrace(FHitResult& BoxHitResult);
+	void ExecuteGetHit(FHitResult& BoxHit);
+	bool ActorIsSameType(AActor* OtherActor);
+
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
-		USoundBase* EquipSound;
+	FVector BoxTraceExtent = FVector(5.f);
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	bool bShowBoxDebug = false;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	USoundBase* EquipSound;
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
-		UBoxComponent* WeaponBox;
+	UBoxComponent* WeaponBox;
 
 	UPROPERTY(VisibleAnywhere)
-		USceneComponent* BoxTraceStart;
+	USceneComponent* BoxTraceStart;
 
 	UPROPERTY(VisibleAnywhere)
-		USceneComponent* BoxTraceEnd;
+	USceneComponent* BoxTraceEnd;
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
-		float Damage = 20.f;
+	float Damage = 20.f;
 
 	UPROPERTY(EditDefaultsOnly)
-		bool IsOneHanded = true;
+	bool IsOneHanded = true;
 
 public:
 	FORCEINLINE UBoxComponent* GetWeaponBox() const { return WeaponBox; }
